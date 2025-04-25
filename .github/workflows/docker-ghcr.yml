@@ -14,19 +14,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Convert repo owner to lowercase
+    - name: Convert repo owner and repo name to lowercase
       id: prep
       run: |
-        # Convert the repository owner to lowercase
+        # Convert the repository owner (username) to lowercase
         repo_owner_lc=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
+        # Convert the repository name to lowercase
+        repo_name_lc=$(echo "${GITHUB_REPOSITORY#*/}" | tr '[:upper:]' '[:lower:]')
         echo "repo_owner_lc=$repo_owner_lc" >> $GITHUB_ENV
-
-    - name: Prepare the tag
-      id: tag
-      run: |
-        # Remove refs/tags/ prefix from the tag
-        tag=${GITHUB_REF#refs/tags/}
-        echo "tag=$tag" >> $GITHUB_ENV
+        echo "repo_name_lc=$repo_name_lc" >> $GITHUB_ENV
 
     - name: Log in to GHCR
       uses: docker/login-action@v3
@@ -35,9 +31,16 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GHCR_TOKEN }}  # Use your PAT here
 
+    - name: Prepare the tag
+      id: tag
+      run: |
+        # Remove refs/tags/ prefix from the tag
+        tag=${GITHUB_REF#refs/tags/}
+        echo "tag=$tag" >> $GITHUB_ENV
+
     - name: Build and Push Docker image
       uses: docker/build-push-action@v5
       with:
         context: .
         push: true
-        tags: ghcr.io/${{ env.repo_owner_lc }}/${{ github.repository }}:${{ env.tag }}
+        tags: ghcr.io/${{ env.repo_owner_lc }}/${{ env.repo_name_lc }}:${{ env.tag }}
