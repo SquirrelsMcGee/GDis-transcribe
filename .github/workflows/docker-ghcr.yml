@@ -21,16 +21,23 @@ jobs:
         repo_owner_lc=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
         echo "repo_owner_lc=$repo_owner_lc" >> $GITHUB_ENV
 
+    - name: Prepare the tag
+      id: tag
+      run: |
+        # Remove refs/tags/ prefix from the tag
+        tag=${GITHUB_REF#refs/tags/}
+        echo "tag=$tag" >> $GITHUB_ENV
+
     - name: Log in to GHCR
       uses: docker/login-action@v3
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ secrets.GHCR_TOKEN }}
+        password: ${{ secrets.GHCR_TOKEN }}  # Use your PAT here
 
     - name: Build and Push Docker image
       uses: docker/build-push-action@v5
       with:
         context: .
         push: true
-        tags: ghcr.io/${{ env.repo_owner_lc }}/${{ github.repository }}:${{ github.ref_name | replace('refs/tags/', '') }}
+        tags: ghcr.io/${{ env.repo_owner_lc }}/${{ github.repository }}:${{ env.tag }}
