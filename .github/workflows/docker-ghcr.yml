@@ -44,3 +44,4 @@ jobs:
         context: .
         push: true
         tags: ghcr.io/${{ env.repo_owner_lc }}/${{ env.repo_name_lc }}:${{ env.tag }}
+        visibility: public  # Ensure the package is public
